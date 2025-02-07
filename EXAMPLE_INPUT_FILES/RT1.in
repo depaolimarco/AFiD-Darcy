@@ -1,0 +1,66 @@
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   -       This is file "bou_newStyle.in"        -
+   The configuration file for parameters in "afid"   
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The user can configure "AFiD" by the switches below. Any option is to be 
+written within primes (e. g., 'option'). A three-digits, left aligned numerical 
+code is provided for each entry (e. g., 001). 
+
+Contact: R. Hartmann rDOThartmannATutwenteDOTnl 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+====> New / Restart Simulation ------------------------------------------------
+101 Read in data from files (no=n, yes=y)    NREAD              'n'
+102 Read in statistics from files (n/y)      STAREAD            'n'
+103 Reset stats (n/y)                        IRESET             'n'
+
+====> Grid specifications -----------------------------------------------------
+201 Number of grid nodes                     NXM NYM NZM        '2048' '512' '512'
+202 Axis length (vertical/stream/span)       ALX3D YLEN ZLEN    '1.0' '0.25' '0.25'
+203 Grid distribution scheme V-Ax            ISTR3              '4'
+204 Grid distribution parameter              STR3               '0.05'
+
+====> Runtime limits ----------------------------------------------------------
+301 Max number of timesteps                  NTST               '10000000'  
+302 Max dimensionless time                   TMAX               '20.0'  
+303 Max wallclock time [s]                   WALLTIMEMAX        '82000'
+
+====> Numerical parameters ----------------------------------------------------
+401 Numerical scheme                         NSST               '3'
+    Modes: 1= 2nd order Adams Bashfort 
+           3= 3rd order Runge Kutta 
+402 Enable dynamic timesteps (n/y)           IDTV               'y'
+403 FIRST or CONSTANT time step              DT                 '1.e-8'
+404 Min/Max dynamic time step                DTMIN DTMAX        '1.e-8' '1.e-3'
+405 Stability param for dynamic steps        CFLMAX             '0.3'
+406 Max velocity divergence per step         RESID              '1.e-7'
+    (mass conservation criterion)
+407 Maximum local velocity                   VLIM               '1.e3'
+408 Initial Pertubation on the Temp field    EPS                '0.05'
+409 Flow time for initial conditions         INITIME            '100.0'
+410 Implicit treatment for diffusive terms   IMPLICIT           'n'
+    (in periodic directions (n/y))
+
+====> Physical parameters -----------------------------------------------------
+501 Rayleigh-Darcy number                    RA                 '3.2e4'
+----Boundary conditions for temperature
+504 Boundary type (bottom/top)               INSLWS INSLWN      '0' '0'
+    (Adiabatic=0, Dirchlet=1)
+505 Boundary value (bottom/top)              TEMPBOT TEMPTOP    '1.0' '0.0'
+    (Only applicable if Dirchlet type)
+506 Gravity components                       GX GY GZ           '-1.0' '0.0' '0.0'
+    (Automatically normalized inside code)
+
+====> Output parameters -------------------------------------------------------
+601 Output timestep interval                 NOUT               '10'
+    for global quantities and stats
+602 Enable statistic calculation (n/y)       STATON INSTON      'y' 'y'  
+603 Enable dissipation calculation (n/y)     BALANCEON          'y'
+604 Start time stat writing                  TSTA               '0.0'
+605 Start & Interval for 3D Snapshots        STARTSNAP SAVESNAP '0.0' '0.25'
+606 Enable output of wall normal slabs (n/y) SLABDUMP(STST3)    'n'
+    at locations specified in stst3.in
+607 Enable 2D Y and Z slices for movie (n/y) MOVIEON TFRAME     'n' '0.1'

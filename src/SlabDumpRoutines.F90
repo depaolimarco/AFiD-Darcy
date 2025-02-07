@@ -1,0 +1,124 @@
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!                                                         !
+!    FILE: SlabDumper.F90                                 !
+!    CONTAINS: subroutines SlabDumper, InitializeSlabDump !
+!     DumpSingleSlab                                      !
+!                                                         !
+!    PURPOSE: Auxiliary routines used for memory allocs   !
+!     and memory freeing                                  !
+!                                                         !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+subroutine SlabDumper
+    use param
+    use local_arrays, only: temp,vx,vy,vz
+    use stat3_param
+    use decomp_2d, only: xstart,xend
+    implicit none
+    integer :: i,j,m
+    real,dimension(xstart(2):xend(2),xstart(3):xend(3)) :: &
+    &      vxcc,vycc,vzcc,tempcc
+    character*70 :: filnam
+    character*1 :: charm
+
+
+    do m=1,9
+        do i=xstart(3),xend(3)
+            do j=xstart(2),xend(2)
+                vxcc(j,i) = (vx(kslab(m),j,i)+vx(kslab(m)+1,j,i))*0.5
+                vycc(j,i) = vy(kslab(m),j,i)
+                vzcc(j,i) = vz(kslab(m),j,i)
+                tempcc(j,i) = temp(kslab(m),j,i)
+            enddo
+        enddo
+        write(charm,28) m
+28      format(i1.1)
+        filnam='slab'//charm//'vx_'
+        call DumpSingleSlab(vxcc,filnam)
+        filnam='slab'//charm//'vy_'
+        call DumpSingleSlab(vycc,filnam)
+        filnam='slab'//charm//'vz_'
+        call DumpSingleSlab(vzcc,filnam)
+        filnam='slab'//charm//'temp_'
+        call DumpSingleSlab(tempcc,filnam)
+    enddo
+
+    return
+end subroutine SlabDumper
+
+!===========================================================================
+
+subroutine InitializeSlabDump
+    use param
+    use stat3_param
+    implicit none
+    integer :: i,k,j
+    real :: xmloc
+    character(len=4) :: dummy
+
+
+    open(unit=19,file='stst3.in',status='old')
+    read(19,301) dummy
+    read(19,*) (xslab(i),i=2,9)
+301 format(a4)
+    close(19)
+
+    kslab = 2
+
+    do k=2,nxm
+        xmloc=xm(k)
+        do j=2,9
+            if(xm(k).gt.xslab(j).and.xm(k-1).lt.xslab(j)) then
+                kslab(j) = k
+            endif
+        enddo
+    enddo
+
+    if (ismaster) then
+        open(unit=23,file='stst3locs.out',status='unknown')
+        rewind(23)
+        write(23,*) (kslab(i),i=1,9)
+        close(23)
+    endif
+
+    return
+end subroutine InitializeSlabDump
+
+!==================================================================
+
+subroutine DumpSingleSlab(var,filnam)
+    USE param
+    use mpih
+    USE hdf5
+    use decomp_2d, only: xstart,xend
+    IMPLICIT none
+
+    real, intent(in) :: var(xstart(2):xend(2) &
+    &                  ,xstart(3):xend(3))
+
+    real :: tprfi
+    integer :: itime
+
+    character*70,intent(in) :: filnam
+    character*70 :: namfile,dsetname
+    character*8 :: ipfi
+
+! ==============================================================================
+    tprfi = 1/savesnap 
+! ==============================================================================
+    itime=nint(time*tprfi)
+    write(ipfi,82)itime
+82  format(i8.8)
+
+    namfile=trim('./stst3/'//trim(filnam)//trim(ipfi)//'.h5')
+    dsetname = trim('var')
+
+    call HdfWriteReal2D(dsetname,namfile,var)
+
+    if(ismaster) then
+        dsetname = trim('time')
+        call HdfSerialWriteRealScalar(dsetname,namfile,time)
+    endif
+
+    return
+end subroutine DumpSingleSlab
