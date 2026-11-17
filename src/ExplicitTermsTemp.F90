@@ -11,7 +11,7 @@
 subroutine ExplicitTermsTemp
 
     use param
-    use local_arrays, only: vy,vx,temp,vz,hro
+    use local_arrays, only: vy,vx,temp,vz,hro, poro, phfy, phfz
     use decomp_2d, only: xstart,xend
 
     implicit none
@@ -35,13 +35,13 @@ subroutine ExplicitTermsTemp
 
                 if (kc.eq.1) then
                     tplo = (temp(kc,jc,ic)*real(1-inslws)) + (tempbp*real(inslws))
-                    tphi = (dx3c(kc)*temp(kc,jc,ic) + dx3c(kp)*temp(kp,jc,ic))/(2.0d0*g3rc(kp))
+                    tphi = (dx3c(kp)*temp(kc,jc,ic) + dx3c(kc)*temp(kp,jc,ic))/(2.0d0*g3rc(kp))
                 else if (kc.eq.nxm) then
-                    tplo = (dx3c(kc)*temp(kc,jc,ic) + dx3c(km)*temp(km,jc,ic))/(2.0d0*g3rc(kc))
+                    tplo = (dx3c(km)*temp(kc,jc,ic) + dx3c(kc)*temp(km,jc,ic))/(2.0d0*g3rc(kc))
                     tphi = (temp(kc,jc,ic)*real(1-inslwn)) + (temptp*real(inslwn))
                 else
-                    tplo = (dx3c(kc)*temp(kc,jc,ic) + dx3c(km)*temp(km,jc,ic))/(2.0d0*g3rc(kc))
-                    tphi = (dx3c(kc)*temp(kc,jc,ic) + dx3c(kp)*temp(kp,jc,ic))/(2.0d0*g3rc(kp))
+                    tplo = (dx3c(km)*temp(kc,jc,ic) + dx3c(kc)*temp(km,jc,ic))/(2.0d0*g3rc(kc))
+                    tphi = (dx3c(kp)*temp(kc,jc,ic) + dx3c(kc)*temp(kp,jc,ic))/(2.0d0*g3rc(kp))
                 end if
 
                 ! d(vz.temp)/dz
@@ -53,10 +53,14 @@ subroutine ExplicitTermsTemp
                 ! d(vx.temp)/dx
                 htx = ((vx(kp,jc,ic)*tphi) - (vx(kc,jc,ic)*tplo))*udx3m(kc)
 
-                dzzt = (temp(kc,jc,ip) -2.0d0*temp(kc,jc,ic) + temp(kc,jc,im))*dzq/pec
-                dyyt = (temp(kc,jp,ic) -2.0d0*temp(kc,jc,ic) + temp(kc,jm,ic))*dyq/pec
+                !Need to include variable porosity in the equations
+                !dzzt = (temp(kc,jc,ip) -2.0d0*temp(kc,jc,ic) + temp(kc,jc,im))*dzq/pec
+                !dyyt = (temp(kc,jp,ic) -2.0d0*temp(kc,jc,ic) + temp(kc,jm,ic))*dyq/pec
 
-                hro(kc,jc,ic) = -(htx+hty+htz) + (real(1-flagimp)*(dyyt+dzzt))
+                dyyt = (phfy(kc,jp,ic) * (temp(kc,jp,ic)-temp(kc,jc,ic)) - phfy(kc,jc,ic)*(temp(kc,jc,ic)-temp(kc,jm,ic)))*dyq/pec
+                dzzt = (phfz(kc,jc,ip) * (temp(kc,jc,ip)-temp(kc,jc,ic)) - phfz(kc,jc,ic)*(temp(kc,jc,ic)-temp(kc,jc,im)))*dzq/pec
+
+                hro(kc,jc,ic) = (-(htx+hty+htz) + (real(1-flagimp)*(dyyt+dzzt)))
 
             enddo
         enddo
