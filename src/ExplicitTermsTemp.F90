@@ -11,7 +11,7 @@
 subroutine ExplicitTermsTemp
 
     use param
-    use local_arrays, only: vy,vx,temp,vz,hro, poro, phfy, phfz
+    use local_arrays, only: vy,vx,temp,vz,hro
     use decomp_2d, only: xstart,xend
 
     implicit none
@@ -53,14 +53,10 @@ subroutine ExplicitTermsTemp
                 ! d(vx.temp)/dx
                 htx = ((vx(kp,jc,ic)*tphi) - (vx(kc,jc,ic)*tplo))*udx3m(kc)
 
-                !Need to include variable porosity in the equations
-                !dzzt = (temp(kc,jc,ip) -2.0d0*temp(kc,jc,ic) + temp(kc,jc,im))*dzq/pec
-                !dyyt = (temp(kc,jp,ic) -2.0d0*temp(kc,jc,ic) + temp(kc,jm,ic))*dyq/pec
+                dzzt = (temp(kc,jc,ip) -2.0d0*temp(kc,jc,ic) + temp(kc,jc,im))*dzq/pec
+                dyyt = (temp(kc,jp,ic) -2.0d0*temp(kc,jc,ic) + temp(kc,jm,ic))*dyq/pec
 
-                dyyt = (phfy(kc,jp,ic) * (temp(kc,jp,ic)-temp(kc,jc,ic)) - phfy(kc,jc,ic)*(temp(kc,jc,ic)-temp(kc,jm,ic)))*dyq/pec
-                dzzt = (phfz(kc,jc,ip) * (temp(kc,jc,ip)-temp(kc,jc,ic)) - phfz(kc,jc,ic)*(temp(kc,jc,ic)-temp(kc,jc,im)))*dzq/pec
-
-                hro(kc,jc,ic) = (-(htx+hty+htz) + (real(1-flagimp)*(dyyt+dzzt)))
+                hro(kc,jc,ic) = -(htx+hty+htz) + (real(1-flagimp)*(dyyt+dzzt))
 
             enddo
         enddo
